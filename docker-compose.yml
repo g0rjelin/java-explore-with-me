@@ -2,7 +2,7 @@ services:
   stats-server:
     ports:
       - "9090:9090"
-    build: stats\stats-service
+    build: stats/stats-service
     image: stats-service
     container_name: stats-server
     depends_on:
