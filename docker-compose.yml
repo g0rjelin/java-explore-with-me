@@ -1,10 +1,10 @@
 services:
-  stats-service:
+  stats-server:
     ports:
       - "9090:9090"
     build: stats\stats-service
     image: stats-service
-    container_name: stats-service
+    container_name: stats-server
     depends_on:
       - stats-db
     environment:
@@ -27,15 +27,15 @@ services:
       interval: 5s
       retries: 10
 
-  main-service:
+  ewm-service:
     ports:
       - "8080:8080"
-    build: main-service
-    image: main-service
-    container_name: main-service
+    build: ewm-service
+    image: ewm-service
+    container_name: ewm-service
     depends_on:
       - ewm-db
-      - stats-service
+      - stats-server
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5433/ewmdb
       - SPRING_DATASOURCE_USERNAME=ewm
