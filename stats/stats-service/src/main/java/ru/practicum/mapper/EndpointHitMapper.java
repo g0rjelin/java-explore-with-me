@@ -6,10 +6,6 @@ import ru.practicum.model.App;
 import ru.practicum.model.EndpointHit;
 import ru.practicum.model.Uri;
 
-import java.time.Instant;
-
-import static ru.practicum.ewm.stats.utils.Constants.DATE_TIME_FORMATTER;
-
 @UtilityClass
 public class EndpointHitMapper {
     public static EndpointHitDto toEndpointHitDto(EndpointHit endpointHit) {
@@ -18,7 +14,7 @@ public class EndpointHitMapper {
                 .app(endpointHit.getApp().getName())
                 .uri(endpointHit.getUri().getName())
                 .ip(endpointHit.getIp())
-                .timestamp(DATE_TIME_FORMATTER.format(endpointHit.getTimestamp()))
+                .timestamp(endpointHit.getTimestamp())
                 .build();
     }
 
@@ -27,7 +23,7 @@ public class EndpointHitMapper {
                 .app(app)
                 .uri(uri)
                 .ip(endpointHitDto.getIp())
-                .timestamp(DATE_TIME_FORMATTER.parse(endpointHitDto.getTimestamp(), Instant::from))
+                .timestamp(endpointHitDto.getTimestamp())
                 .build();
     }
 }

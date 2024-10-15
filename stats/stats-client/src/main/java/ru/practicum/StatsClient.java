@@ -5,9 +5,9 @@ import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 import ru.practicum.ewm.stats.dto.EndpointHitDto;
 import ru.practicum.ewm.stats.dto.ViewStatsDto;
+import ru.practicum.ewm.stats.dto.ViewStatsRequestDto;
 
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.util.List;
 
 import java.net.URLEncoder;
@@ -34,18 +34,18 @@ public class StatsClient {
                 .body(EndpointHitDto.class);
     }
 
-    public List<ViewStatsDto> getStats(Instant start, Instant end, List<String> uris, Boolean unique) {
-        String startStr = URLEncoder.encode(DATE_TIME_FORMATTER.format(start), StandardCharsets.UTF_8);
-        String endStr = URLEncoder.encode(DATE_TIME_FORMATTER.format(end), StandardCharsets.UTF_8);
+    public List<ViewStatsDto> getStats(ViewStatsRequestDto viewStatsRequestDto) {
+        String startStr = URLEncoder.encode(DATE_TIME_FORMATTER.format(viewStatsRequestDto.getStart()), StandardCharsets.UTF_8);
+        String endStr = URLEncoder.encode(DATE_TIME_FORMATTER.format(viewStatsRequestDto.getEnd()), StandardCharsets.UTF_8);
+        List<String> uris = viewStatsRequestDto.getUris();
+        Boolean unique = viewStatsRequestDto.isUnique();
         StringBuilder uriBuilder = new StringBuilder(STATS_ENDPOINT);
         uriBuilder.append("start=").append(startStr);
         uriBuilder.append("end=").append(endStr);
         if (!Objects.isNull(uris) && !uris.isEmpty()) {
             uriBuilder.append("uris=").append(String.join(",", uris));
         }
-        if (!Objects.isNull(unique)) {
-            uriBuilder.append("unique=").append(unique);
-        }
+        uriBuilder.append("unique=").append(unique);
 
         return restClient.get()
                 .uri(uriBuilder.toString())
@@ -54,15 +54,4 @@ public class StatsClient {
                 });
     }
 
-    public List<ViewStatsDto> getStats(Instant start, Instant end, List<String> uris) {
-        return getStats(start, end, uris, null);
-    }
-
-    public List<ViewStatsDto> getStats(Instant start, Instant end, Boolean unique) {
-        return getStats(start, end, null, unique);
-    }
-
-    public List<ViewStatsDto> getStats(Instant start, Instant end) {
-        return getStats(start, end, null, null);
-    }
 }

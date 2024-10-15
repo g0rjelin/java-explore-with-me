@@ -20,7 +20,6 @@ import lombok.experimental.FieldDefaults;
 @Entity
 @Table(name = "apps")
 public class App {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;

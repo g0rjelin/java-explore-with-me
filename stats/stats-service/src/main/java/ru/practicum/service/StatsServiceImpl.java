@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.stats.dto.EndpointHitDto;
 import ru.practicum.ewm.stats.dto.ViewStatsDto;
+import ru.practicum.ewm.stats.dto.ViewStatsRequestDto;
 import ru.practicum.mapper.EndpointHitMapper;
 import ru.practicum.mapper.ViewStatsMapper;
 import ru.practicum.model.App;
@@ -14,11 +15,10 @@ import ru.practicum.repository.AppRepository;
 import ru.practicum.repository.EndpointHitRepository;
 import ru.practicum.repository.UriRepository;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 
-import static ru.practicum.ewm.stats.utils.Constants.DATE_TIME_FORMATTER;
+import static ru.practicum.ewm.stats.utils.Constants.MSK_ZONE;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Service
@@ -37,10 +37,10 @@ public class StatsServiceImpl implements StatsService {
     }
 
     @Override
-    public List<ViewStatsDto> getStats(String startStr, String endStr, List<String> uris, boolean unique) {
-        Instant start = DATE_TIME_FORMATTER.parse(java.net.URLDecoder.decode(startStr, StandardCharsets.UTF_8), Instant::from);
-        Instant end = DATE_TIME_FORMATTER.parse(java.net.URLDecoder.decode(endStr, StandardCharsets.UTF_8), Instant::from);
-        return ViewStatsMapper.toViewStatsDto(endpointHitRepository.findViewStats(start, end, uris, unique));
+    public List<ViewStatsDto> getStats(ViewStatsRequestDto viewStatsRequestDto) {
+        Instant start = viewStatsRequestDto.getStart().atZone(MSK_ZONE).toInstant();
+        Instant end = viewStatsRequestDto.getEnd().atZone(MSK_ZONE).toInstant();
+        return ViewStatsMapper.toViewStatsDto(endpointHitRepository.findViewStats(start, end, viewStatsRequestDto.getUris(), viewStatsRequestDto.isUnique()));
     }
 
     private App getAppByName(String appStr) {
