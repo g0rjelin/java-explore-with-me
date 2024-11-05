@@ -48,7 +48,7 @@ public class EwmStatsClient {
             return new HashMap<>();
         } else {
             ViewStatsRequestDto viewStatsRequestDto = ViewStatsRequestDto.builder()
-                    .start(events.stream().min(Comparator.comparing(Event::getEventDate)).map(Event::getEventDate).orElse(Instant.EPOCH))
+                    .start(events.stream().min(Comparator.comparing(Event::getCreatedOn)).map(Event::getCreatedOn).orElse(Instant.EPOCH))
                     .end(Instant.now().plusSeconds(1L)) //добавлена секунда для корректного отбора статистики в БД
                     .uris(events.stream().map(event -> String.format(EVENT_URI, event.getId())).toList())
                     .unique(true)
