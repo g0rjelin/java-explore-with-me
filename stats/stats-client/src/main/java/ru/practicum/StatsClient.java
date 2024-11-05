@@ -40,12 +40,12 @@ public class StatsClient {
         List<String> uris = viewStatsRequestDto.getUris();
         Boolean unique = viewStatsRequestDto.isUnique();
         StringBuilder uriBuilder = new StringBuilder(STATS_ENDPOINT);
-        uriBuilder.append("start=").append(startStr);
-        uriBuilder.append("end=").append(endStr);
+        uriBuilder.append("?start=").append(startStr);
+        uriBuilder.append("&end=").append(endStr);
         if (!Objects.isNull(uris) && !uris.isEmpty()) {
-            uriBuilder.append("uris=").append(String.join(",", uris));
+            uriBuilder.append("&uris=").append(String.join(",", uris));
         }
-        uriBuilder.append("unique=").append(unique);
+        uriBuilder.append("&unique=").append(unique);
 
         return restClient.get()
                 .uri(uriBuilder.toString())

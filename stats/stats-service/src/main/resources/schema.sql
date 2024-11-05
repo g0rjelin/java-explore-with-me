@@ -13,5 +13,5 @@ CREATE TABLE IF NOT EXISTS endpoint_hits (
     app_id BIGINT REFERENCES apps(id),
     uri_id BIGINT REFERENCES uris(id),
     ip VARCHAR(15) NOT NULL,
-    created TIMESTAMP NOT NULL
+    created TIMESTAMP(0) WITH TIME ZONE NOT NULL
     );
