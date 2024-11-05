@@ -18,6 +18,7 @@ import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.UniqueConstraintException;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -28,7 +29,7 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ApiError handleBadRequest(final Exception e) {
         return ApiError.builder()
-                .errors(List.of(e.getStackTrace()))
+                .errors(Arrays.stream(e.getStackTrace()).limit(10).toList())
                 .message(e.getMessage())
                 .reason(e.getLocalizedMessage())
                 .status(HttpStatus.BAD_REQUEST.toString())
@@ -40,7 +41,7 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     ApiError handleConflict(final Exception e) {
         return ApiError.builder()
-                .errors(List.of(e.getStackTrace()))
+                .errors(Arrays.stream(e.getStackTrace()).limit(10).toList())
                 .message(e.getMessage())
                 .reason(e.getLocalizedMessage())
                 .status(HttpStatus.CONFLICT.toString())
@@ -52,7 +53,7 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     ApiError handleNotFound(final NotFoundException e) {
         return ApiError.builder()
-                .errors(List.of(e.getStackTrace()))
+                .errors(Arrays.stream(e.getStackTrace()).limit(10).toList())
                 .message(e.getMessage())
                 .reason(e.getLocalizedMessage())
                 .status(HttpStatus.NOT_FOUND.toString())
@@ -65,7 +66,7 @@ public class ErrorHandler {
     ApiError handleException(final RuntimeException e) {
         log.error("Internal server error: {}", e.getMessage());
         return ApiError.builder()
-                .errors(List.of(e.getStackTrace()))
+                .errors(Arrays.stream(e.getStackTrace()).limit(10).toList())
                 .message(e.getMessage())
                 .reason(e.getLocalizedMessage())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.toString())
