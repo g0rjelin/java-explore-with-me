@@ -18,7 +18,7 @@ public class EventShortDto {
     String annotation;
     CategoryDto category;
     int confirmedRequests;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Europe/Moscow")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "UTC")
     Instant eventDate;
     UserShortDto initiator;
     boolean paid;

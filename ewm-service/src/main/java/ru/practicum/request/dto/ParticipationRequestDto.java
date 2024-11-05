@@ -14,7 +14,7 @@ import java.time.Instant;
 @Data
 public class ParticipationRequestDto {
     Long id;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Europe/Moscow")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "UTC")
     Instant created;
     Long event;
     Long requester;

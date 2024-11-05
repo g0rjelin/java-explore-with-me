@@ -7,6 +7,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -23,6 +24,6 @@ public class FutureHoursConstraintValidator implements ConstraintValidator<Futur
         if (Objects.isNull(date)) {
             return true;
         }
-        return date.isAfter(Instant.now().plus(Duration.ofHours(hours)));
+        return date.isAfter(Instant.now().truncatedTo(ChronoUnit.SECONDS).plus(Duration.ofHours(hours)));
     }
 }

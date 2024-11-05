@@ -16,7 +16,7 @@ import java.time.Instant;
 @Data
 public class UpdateEventAdminRequest extends AbstractUpdateEventRequestDto {
     @FutureHours(hours = 1)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Europe/Moscow")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "UTC")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     Instant eventDate;
 
