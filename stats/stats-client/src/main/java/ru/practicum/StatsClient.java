@@ -17,12 +17,11 @@ import static ru.practicum.ewm.stats.utils.Constants.DATE_TIME_FORMATTER;
 
 public class StatsClient {
     private final RestClient restClient;
-    private static final String BASE_URL = "http://localhost:9090";
     private static final String HIT_ENDPOINT = "/hit";
     private static final String STATS_ENDPOINT = "/stats";
 
-    public StatsClient() {
-        this.restClient = RestClient.create(BASE_URL);
+    public StatsClient(String baseUrl) {
+        this.restClient = RestClient.create(baseUrl);
     }
 
     public EndpointHitDto create(EndpointHitDto endpointHitDto) {

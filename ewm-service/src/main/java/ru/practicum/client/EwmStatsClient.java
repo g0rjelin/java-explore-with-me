@@ -3,6 +3,7 @@ package ru.practicum.client;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import ru.practicum.StatsClient;
@@ -21,11 +22,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Configuration
 public class EwmStatsClient {
+    @Value("${stats-service.url}")
+    String statsServiceUrl;
+
     public static final String EVENT_URI = "/events/%d";
 
     @Bean
     public StatsClient statsClient() {
-        return new StatsClient();
+        return new StatsClient(statsServiceUrl);
     }
 
     public long getViewsFromStartToNow(Instant start, Long eventId) {
