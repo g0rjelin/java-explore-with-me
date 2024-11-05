@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
-import static ru.practicum.ewm.stats.utils.Constants.MSK_ZONE;
+import static ru.practicum.ewm.stats.utils.Constants.UTC_ZONE;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RestController
@@ -51,8 +51,8 @@ public class EventAdminController {
                 usersIds,
                 states,
                 categoriesIds,
-                Objects.isNull(rangeStart) ? null : rangeStart.atZone(MSK_ZONE).toInstant(),
-                Objects.isNull(rangeEnd) ? null : rangeEnd.atZone(MSK_ZONE).toInstant(),
+                Objects.isNull(rangeStart) ? null : rangeStart.atZone(UTC_ZONE).toInstant(),
+                Objects.isNull(rangeEnd) ? null : rangeEnd.atZone(UTC_ZONE).toInstant(),
                 from, size);
     }
 

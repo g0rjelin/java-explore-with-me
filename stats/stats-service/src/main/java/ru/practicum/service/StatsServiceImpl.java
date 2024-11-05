@@ -18,7 +18,7 @@ import ru.practicum.repository.UriRepository;
 import java.time.Instant;
 import java.util.List;
 
-import static ru.practicum.ewm.stats.utils.Constants.MSK_ZONE;
+import static ru.practicum.ewm.stats.utils.Constants.UTC_ZONE;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Service
@@ -38,8 +38,8 @@ public class StatsServiceImpl implements StatsService {
 
     @Override
     public List<ViewStatsDto> getStats(ViewStatsRequestDto viewStatsRequestDto) {
-        Instant start = viewStatsRequestDto.getStart().atZone(MSK_ZONE).toInstant();
-        Instant end = viewStatsRequestDto.getEnd().atZone(MSK_ZONE).toInstant();
+        Instant start = viewStatsRequestDto.getStart().atZone(UTC_ZONE).toInstant();
+        Instant end = viewStatsRequestDto.getEnd().atZone(UTC_ZONE).toInstant();
         return ViewStatsMapper.toViewStatsDto(endpointHitRepository.findViewStats(start, end, viewStatsRequestDto.getUris(), viewStatsRequestDto.isUnique()));
     }
 
