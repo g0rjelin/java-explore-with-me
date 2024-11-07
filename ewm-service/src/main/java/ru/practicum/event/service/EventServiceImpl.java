@@ -12,7 +12,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.repository.CategoryRepository;
-import ru.practicum.client.EwmStatsClient;
 import ru.practicum.event.dto.AbstractUpdateEventRequestDto;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.EventShortDto;
@@ -41,6 +40,7 @@ import ru.practicum.request.mapper.ParticipationRequestMapper;
 import ru.practicum.request.model.ParticipationRequest;
 import ru.practicum.request.model.ParticipationRequestStatus;
 import ru.practicum.request.repository.ParticipationRequestRepository;
+import ru.practicum.stats.StatsService;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
 
@@ -63,14 +63,15 @@ public class EventServiceImpl implements EventService {
     final CategoryRepository categoryRepository;
     final LocationRepository locationRepository;
     final ParticipationRequestRepository participationRequestRepository;
-    final EwmStatsClient ewmStatsClient;
+    final StatsService statsService;
 
     @Value("${spring.application.name}")
     String appName;
 
-    static final String UPDATE_NOT_PENDING_OR_CANCELED_EVENT_ERROR_MSG = "Можно обновить только отмененное событие или событие в режиме ожидания"; //"Only pending or canceled events can be changed";
-    static final String PUBLISH_NOT_PENDING_EVENT_ERROR_MSG = "Нельзя публиковать событие не в статусе ожидает публикации"; //"Only pending or canceled events can be changed";
-    static final String CANCEL_NOT_PUBLISHED_EVENT_ERROR_MSG = "Нельзя отклонить неопубликованное событие"; //"Only pending or canceled events can be changed";
+
+    static final String UPDATE_NOT_PENDING_OR_CANCELED_EVENT_ERROR_MSG = "Можно обновить только отмененное событие или событие в режиме ожидания";
+    static final String PUBLISH_NOT_PENDING_EVENT_ERROR_MSG = "Нельзя публиковать событие не в статусе ожидает публикации";
+    static final String CANCEL_NOT_PUBLISHED_EVENT_ERROR_MSG = "Нельзя отклонить неопубликованное событие";
     static final String USER_UPDATE_EVENTDATE_ERROR_MSG = "Дата события не может быть раньше, чем через два часа от текущего момента";
     static final String ADMIN_UPDATE_EVENTDATE_ERROR_MSG = "Дата события должна быть не ранее чем за час от даты публикации";
     static final String PARTICIPATION_INFO_REQUESTED_NOT_BY_INITIATOR_ERROR_MSG = "Информация о запросах события может быть запрошена только его инициатором";
@@ -94,7 +95,7 @@ public class EventServiceImpl implements EventService {
         userRepository.getUserById(userId);
         PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
         List<Event> events = eventRepository.findAllByInitiatorId(userId, page);
-        Map<Long, Long> views = ewmStatsClient.getViewsForEvents(events);
+        Map<Long, Long> views = statsService.getViewsForEvents(events);
         return EventMapper.toEventShortDto(events, views);
     }
 
@@ -102,7 +103,7 @@ public class EventServiceImpl implements EventService {
     public EventFullDto getEventByIdForUser(Long userId, Long eventId) {
         userRepository.getUserById(userId);
         Event event = eventRepository.getEventById(eventId);
-        return EventMapper.toEventFullDto(event, ewmStatsClient.getViewsFromStartToNow(event.getCreatedOn(), eventId));
+        return EventMapper.toEventFullDto(event, statsService.getViewsFromStartToNow(event.getCreatedOn(), eventId));
     }
 
     @Override
@@ -124,7 +125,7 @@ public class EventServiceImpl implements EventService {
                 case CANCEL_REVIEW -> event.setState(EventState.CANCELED);
             }
         }
-        return EventMapper.toEventFullDto(eventRepository.save(event), ewmStatsClient.getViewsFromStartToNow(event.getCreatedOn(), eventId));
+        return EventMapper.toEventFullDto(eventRepository.save(event), statsService.getViewsFromStartToNow(event.getCreatedOn(), eventId));
     }
 
     private void setEventRequestsDtoToEvent(AbstractUpdateEventRequestDto updateEventRequestDto, Event event) {
@@ -239,7 +240,7 @@ public class EventServiceImpl implements EventService {
         }
         PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
         List<Event> events = eventRepository.findAll(condition, page).getContent();
-        Map<Long, Long> views = ewmStatsClient.getViewsForEvents(events);
+        Map<Long, Long> views = statsService.getViewsForEvents(events);
         return EventMapper.toEventFullDto(events, views);
     }
 
@@ -265,7 +266,7 @@ public class EventServiceImpl implements EventService {
             }
         }
         setEventRequestsDtoToEvent(updateEventAdminRequest, event);
-        return EventMapper.toEventFullDto(eventRepository.save(event), ewmStatsClient.getViewsFromStartToNow(event.getCreatedOn(), eventId));
+        return EventMapper.toEventFullDto(eventRepository.save(event), statsService.getViewsFromStartToNow(event.getCreatedOn(), eventId));
     }
 
     @Override
@@ -278,7 +279,7 @@ public class EventServiceImpl implements EventService {
                                                             EventSort sort,
                                                             Integer from, Integer size,
                                                             HttpServletRequest request) {
-        ewmStatsClient.statsClient().create(EndpointHitDto.builder()
+        statsService.create(EndpointHitDto.builder()
                 .app(appName)
                 .uri(request.getRequestURI())
                 .ip(request.getRemoteAddr())
@@ -314,7 +315,7 @@ public class EventServiceImpl implements EventService {
             page = PageRequest.of(from > 0 ? from / size : 0, size);
             events = eventRepository.findAll(condition, page).getContent();
         }
-        Map<Long, Long> views = ewmStatsClient.getViewsForEvents(events);
+        Map<Long, Long> views = statsService.getViewsForEvents(events);
         List<EventShortDto> eventShortDtos = EventMapper.toEventShortDto(events, views);
         if (!Objects.isNull(sort) && sort.equals(EventSort.VIEWS)) {
             eventShortDtos = eventShortDtos.stream()
@@ -328,12 +329,12 @@ public class EventServiceImpl implements EventService {
     public EventFullDto getPublishedEventById(Long eventId, HttpServletRequest request) {
         Event event = eventRepository.findByIdAndState(eventId, EventState.PUBLISHED)
                 .orElseThrow(() -> new NotFoundException(eventId, Event.class.toString()));
-        ewmStatsClient.statsClient().create(EndpointHitDto.builder()
+        statsService.create(EndpointHitDto.builder()
                 .app(appName)
                 .uri(request.getRequestURI())
                 .ip(request.getRemoteAddr())
                 .build());
-        long views = ewmStatsClient.getViewsFromStartToNow(event.getCreatedOn(), eventId);
+        long views = statsService.getViewsFromStartToNow(event.getCreatedOn(), eventId);
         return EventMapper.toEventFullDto(event, views);
     }
 

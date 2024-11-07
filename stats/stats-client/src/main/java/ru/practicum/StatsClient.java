@@ -1,7 +1,12 @@
 package ru.practicum;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import ru.practicum.ewm.stats.dto.EndpointHitDto;
 import ru.practicum.ewm.stats.dto.ViewStatsDto;
@@ -15,12 +20,15 @@ import java.util.Objects;
 
 import static ru.practicum.ewm.stats.utils.Constants.DATE_TIME_FORMATTER;
 
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Component
 public class StatsClient {
-    private final RestClient restClient;
-    private static final String HIT_ENDPOINT = "/hit";
-    private static final String STATS_ENDPOINT = "/stats";
+    final RestClient restClient;
+    static final String HIT_ENDPOINT = "/hit";
+    static final String STATS_ENDPOINT = "/stats";
 
-    public StatsClient(String baseUrl) {
+    @Autowired
+    public StatsClient(@Value("${stats-service.url}") String baseUrl) {
         this.restClient = RestClient.create(baseUrl);
     }
 

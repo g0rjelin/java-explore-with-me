@@ -13,7 +13,6 @@ import ru.practicum.exception.ConflictException;
 import ru.practicum.category.mapper.CategoryMapper;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.repository.CategoryRepository;
-import ru.practicum.exception.UniqueConstraintException;
 
 import java.util.List;
 
@@ -25,13 +24,11 @@ public class CategoryServiceImpl implements CategoryService {
     final CategoryRepository categoryRepository;
     final EventRepository eventRepository;
 
-    static final String DUPLICATE_CATEGORY_NAME_ERROR = "Наименование категории %s уже используется";
     static final String DELETE_CATEGORY_WITH_EVENT_ERROR_MSG = "Нельзя удалить категорию, к которой привязано хотя бы одно событие";
 
 
     @Override
     public CategoryDto create(NewCategoryDto newCategoryDto) {
-        checkUniqueCategoryName(newCategoryDto.getName());
         return CategoryMapper.toCategoryDto(categoryRepository.save(CategoryMapper.toCategory(newCategoryDto)));
     }
 
@@ -45,12 +42,9 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public CategoryDto update(Long categoryId, NewCategoryDto newCategoryDto) {
+    public CategoryDto update(Long categoryId, CategoryDto updCategoryDto) {
         Category category = categoryRepository.getCategoryById(categoryId);
-        if (!category.getName().equals(newCategoryDto.getName())) {
-            checkUniqueCategoryName(newCategoryDto.getName());
-        }
-        category.setName(newCategoryDto.getName());
+        category.setName(updCategoryDto.getName());
         return CategoryMapper.toCategoryDto(categoryRepository.save(category));
     }
 
@@ -63,11 +57,5 @@ public class CategoryServiceImpl implements CategoryService {
     public List<CategoryDto> getCategories(Integer from, Integer size) {
         PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
         return CategoryMapper.toCategoryDtoList(categoryRepository.findAll(page).getContent());
-    }
-
-    private void checkUniqueCategoryName(String name) {
-        if (categoryRepository.findCategoryByName(name).isPresent()) {
-            throw new UniqueConstraintException(String.format(DUPLICATE_CATEGORY_NAME_ERROR, name));
-        }
     }
 }

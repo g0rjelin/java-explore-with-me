@@ -7,7 +7,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.user.dto.NewUserRequest;
 import ru.practicum.user.dto.UserDto;
-import ru.practicum.exception.UniqueConstraintException;
 import ru.practicum.user.mapper.UserMapper;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
@@ -21,9 +20,6 @@ import java.util.Objects;
 public class UserServiceImpl implements UserService {
     final UserRepository userRepository;
 
-    static final String DUPLICATE_EMAIL_ERROR = "Электронная почта %s уже используется";
-
-
     @Override
     public List<UserDto> getUsers(List<Long> ids, Integer from, Integer size) {
         PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
@@ -33,7 +29,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto create(NewUserRequest newUserRequest) {
-        checkUniqueEmail(newUserRequest.getEmail());
         return UserMapper.toUserDto(userRepository.save(UserMapper.toUser(newUserRequest)));
     }
 
@@ -41,11 +36,5 @@ public class UserServiceImpl implements UserService {
     public void delete(Long id) {
         User delUser = userRepository.getUserById(id);
         userRepository.delete(delUser);
-    }
-
-    private void checkUniqueEmail(String email) {
-        if (userRepository.findUserByEmail(email).isPresent()) {
-            throw new UniqueConstraintException(String.format(DUPLICATE_EMAIL_ERROR, email));
-        }
     }
 }

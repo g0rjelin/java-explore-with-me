@@ -37,8 +37,8 @@ public class CategoryAdminController {
     @PatchMapping("/{catId}")
     @ResponseStatus(HttpStatus.OK)
     public CategoryDto updateCategory(@PathVariable(name = "catId") @Positive @NotNull Long categoryId,
-                                      @RequestBody @Valid NewCategoryDto newCategoryDto) {
-        return categoryService.update(categoryId, newCategoryDto);
+                                      @RequestBody @Valid CategoryDto updCategoryDto) {
+        return categoryService.update(categoryId, updCategoryDto);
     }
 
     @DeleteMapping("/{catId}")

@@ -11,7 +11,6 @@ import lombok.experimental.FieldDefaults;
 import java.time.Instant;
 import java.util.List;
 
-//@JsonDeserialize(using = StatsRequestDateDeserializer.class)
 @Data
 @Builder
 @NoArgsConstructor

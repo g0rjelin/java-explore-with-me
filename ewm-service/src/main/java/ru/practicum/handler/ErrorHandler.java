@@ -1,11 +1,11 @@
 package ru.practicum.handler;
 
-import jakarta.validation.ConstraintViolationException;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.exception.BadRequestException;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
-import ru.practicum.exception.UniqueConstraintException;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -25,7 +24,7 @@ import java.util.List;
 @RestControllerAdvice
 public class ErrorHandler {
 
-    @ExceptionHandler({MethodArgumentNotValidException.class, BadRequestException.class, ConstraintViolationException.class})
+    @ExceptionHandler({MethodArgumentNotValidException.class, BadRequestException.class, jakarta.validation.ConstraintViolationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ApiError handleBadRequest(final Exception e) {
         return ApiError.builder()
@@ -37,7 +36,7 @@ public class ErrorHandler {
                 .build();
     }
 
-    @ExceptionHandler({ConflictException.class, UniqueConstraintException.class})
+    @ExceptionHandler({ConflictException.class, DataIntegrityViolationException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
     ApiError handleConflict(final Exception e) {
         return ApiError.builder()
