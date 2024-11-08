@@ -17,3 +17,18 @@ spring:
   sql:
     init:
       mode: always
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+        type: TRACE
+        orm:
+          jdbc:
+            bind: TRACE
+      springframework:
+        orm:
+          jpa: INFO
+          jpa.JpaTransactionManager: DEBUG
+        transaction: INFO
+        transaction.interceptor: TRACE

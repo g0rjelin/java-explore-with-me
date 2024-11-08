@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.ewm.stats.dto.EndpointHitDto;
 import ru.practicum.ewm.stats.dto.ViewStatsDto;
 import ru.practicum.ewm.stats.dto.ViewStatsRequestDto;
+import ru.practicum.exception.BadRequestException;
 import ru.practicum.mapper.EndpointHitMapper;
 import ru.practicum.mapper.ViewStatsMapper;
 import ru.practicum.model.App;
@@ -18,12 +19,13 @@ import ru.practicum.repository.UriRepository;
 import java.time.Instant;
 import java.util.List;
 
-import static ru.practicum.ewm.stats.utils.Constants.MSK_ZONE;
+import static ru.practicum.ewm.stats.utils.Constants.UTC_ZONE;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Service
 @RequiredArgsConstructor
 public class StatsServiceImpl implements StatsService {
+    static final String END_DATE_BEFORE_START_ERROR_MSG = "Дата окончания не может раньше даты начала";
 
     final EndpointHitRepository endpointHitRepository;
     final UriRepository uriRepository;
@@ -38,8 +40,11 @@ public class StatsServiceImpl implements StatsService {
 
     @Override
     public List<ViewStatsDto> getStats(ViewStatsRequestDto viewStatsRequestDto) {
-        Instant start = viewStatsRequestDto.getStart().atZone(MSK_ZONE).toInstant();
-        Instant end = viewStatsRequestDto.getEnd().atZone(MSK_ZONE).toInstant();
+        Instant start = viewStatsRequestDto.getStart().atZone(UTC_ZONE).toInstant();
+        Instant end = viewStatsRequestDto.getEnd().atZone(UTC_ZONE).toInstant();
+        if (start.isAfter(end)) {
+            throw new BadRequestException(END_DATE_BEFORE_START_ERROR_MSG);
+        }
         return ViewStatsMapper.toViewStatsDto(endpointHitRepository.findViewStats(start, end, viewStatsRequestDto.getUris(), viewStatsRequestDto.isUnique()));
     }
 

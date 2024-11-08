@@ -1,7 +1,12 @@
 package ru.practicum;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import ru.practicum.ewm.stats.dto.EndpointHitDto;
 import ru.practicum.ewm.stats.dto.ViewStatsDto;
@@ -15,14 +20,16 @@ import java.util.Objects;
 
 import static ru.practicum.ewm.stats.utils.Constants.DATE_TIME_FORMATTER;
 
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Component
 public class StatsClient {
-    private final RestClient restClient;
-    private static final String BASE_URL = "http://localhost:9090";
-    private static final String HIT_ENDPOINT = "/hit";
-    private static final String STATS_ENDPOINT = "/stats";
+    final RestClient restClient;
+    static final String HIT_ENDPOINT = "/hit";
+    static final String STATS_ENDPOINT = "/stats";
 
-    public StatsClient() {
-        this.restClient = RestClient.create(BASE_URL);
+    @Autowired
+    public StatsClient(@Value("${stats-service.url}") String baseUrl) {
+        this.restClient = RestClient.create(baseUrl);
     }
 
     public EndpointHitDto create(EndpointHitDto endpointHitDto) {
@@ -40,12 +47,12 @@ public class StatsClient {
         List<String> uris = viewStatsRequestDto.getUris();
         Boolean unique = viewStatsRequestDto.isUnique();
         StringBuilder uriBuilder = new StringBuilder(STATS_ENDPOINT);
-        uriBuilder.append("start=").append(startStr);
-        uriBuilder.append("end=").append(endStr);
+        uriBuilder.append("?start=").append(startStr);
+        uriBuilder.append("&end=").append(endStr);
         if (!Objects.isNull(uris) && !uris.isEmpty()) {
-            uriBuilder.append("uris=").append(String.join(",", uris));
+            uriBuilder.append("&uris=").append(String.join(",", uris));
         }
-        uriBuilder.append("unique=").append(unique);
+        uriBuilder.append("&unique=").append(unique);
 
         return restClient.get()
                 .uri(uriBuilder.toString())
