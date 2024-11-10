@@ -2635,7 +2635,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/events?text=0&categories=0&paid=true&rangeStart=2022-01-06%2013%3A30%3A38&rangeEnd=2097-09-06%2013%3A30%3A38&onlyAvailable=false&sort=EVENT_DATE&from=0&size=1000&locationId=",
+							"raw": "{{baseUrl}}/events?text=0&categories=0&paid=true&rangeStart=2022-01-06%2013%3A30%3A38&rangeEnd=2097-09-06%2013%3A30%3A38&onlyAvailable=false&sort=EVENT_DATE&from=0&size=1000&locationId={{locationPiterId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -2690,7 +2690,7 @@
 								},
 								{
 									"key": "locationId",
-									"value": "",
+									"value": "{{locationPiterId}}",
 									"description": "идентификатор локации для поиска событий внутри нее"
 								}
 							]
@@ -2932,7 +2932,7 @@
 									"locId = pm.collectionVariables.get('locid');\r",
 									"\r",
 									"pm.test(\"Локация должна быть найдена до удаления\", function () {\r",
-									"    pm.expect(source.id).equal(locId, 'Идентификтор локации должен совпадать с удаляемым');\r",
+									"    pm.expect(source.id).equal(parseInt(locId), 'Идентификтор локации должен совпадать с удаляемым');\r",
 									"});\r",
 									"\r",
 									"pm.sendRequest({\r",
