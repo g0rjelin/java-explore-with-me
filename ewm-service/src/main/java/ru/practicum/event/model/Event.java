@@ -21,6 +21,7 @@ import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 import ru.practicum.category.model.Category;
+import ru.practicum.location.model.Location;
 import ru.practicum.user.model.User;
 
 import java.time.Instant;

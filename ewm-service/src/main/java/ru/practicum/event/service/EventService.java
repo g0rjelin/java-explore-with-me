@@ -35,6 +35,7 @@ public interface EventService {
                                               List<Long> categoriesIds,
                                               Instant rangeStart,
                                               Instant rangeEnd,
+                                              Long locationId,
                                               Integer from,
                                               Integer size
     );
@@ -48,6 +49,7 @@ public interface EventService {
                                                      Instant rangeEnd,
                                                      Boolean onlyAvailable,
                                                      EventSort sort,
+                                                     Long locationId,
                                                      Integer from,
                                                      Integer size,
                                                      HttpServletRequest request);

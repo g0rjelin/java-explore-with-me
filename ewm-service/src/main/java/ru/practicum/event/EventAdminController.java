@@ -43,6 +43,7 @@ public class EventAdminController {
             @RequestParam(name = "categories", required = false) List<@Positive Long> categoriesIds,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
+            @RequestParam(required = false) @Positive Long locationId,
             @RequestParam(required = false, defaultValue = "0") @PositiveOrZero Integer from,
             @RequestParam(required = false, defaultValue = "10") @Positive Integer size
     ) {
@@ -53,6 +54,7 @@ public class EventAdminController {
                 categoriesIds,
                 Objects.isNull(rangeStart) ? null : rangeStart.atZone(UTC_ZONE).toInstant(),
                 Objects.isNull(rangeEnd) ? null : rangeEnd.atZone(UTC_ZONE).toInstant(),
+                locationId,
                 from, size);
     }
 

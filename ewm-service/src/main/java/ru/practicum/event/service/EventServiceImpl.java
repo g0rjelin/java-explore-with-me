@@ -16,7 +16,7 @@ import ru.practicum.event.dto.AbstractUpdateEventRequestDto;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.dto.EventSort;
-import ru.practicum.event.dto.LocationDto;
+import ru.practicum.location.dto.LocationDto;
 import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.event.dto.StateActionAdmin;
 import ru.practicum.event.dto.StateActionUser;
@@ -25,10 +25,11 @@ import ru.practicum.event.dto.UpdateEventUserRequest;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
-import ru.practicum.event.model.Location;
+import ru.practicum.location.model.Location;
 import ru.practicum.event.model.QEvent;
 import ru.practicum.event.repository.EventRepository;
-import ru.practicum.event.repository.LocationRepository;
+import ru.practicum.location.model.QLocation;
+import ru.practicum.location.repository.LocationRepository;
 import ru.practicum.ewm.stats.dto.EndpointHitDto;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
@@ -82,11 +83,13 @@ public class EventServiceImpl implements EventService {
     static final Integer USER_UPDATE_LIMIT_HOURS = 2;
     static final Integer ADMIN_UPDATE_LIMIT_HOURS = 1;
 
+    static final String DEFAULT_LOCATION_FROM_EVENT_PREFIX = "Локация для: %s";
+
     @Override
     public EventFullDto create(Long userId, NewEventDto newEventDto) {
         User initiator = userRepository.getUserById(userId);
         Category category = categoryRepository.getCategoryById(newEventDto.getCategory());
-        Location location = getLocation(newEventDto.getLocation());
+        Location location = getLocation(newEventDto.getLocation(), newEventDto.getTitle());
         return EventMapper.toEventFullDto(eventRepository.save(EventMapper.toEvent(newEventDto, initiator, category, location)), 0L);
     }
 
@@ -136,15 +139,15 @@ public class EventServiceImpl implements EventService {
         event.setAnnotation(Objects.requireNonNullElse(updateEventRequestDto.getAnnotation(), event.getAnnotation()));
         event.setDescription(Objects.requireNonNullElse(updateEventRequestDto.getDescription(), event.getDescription()));
         event.setEventDate(Objects.requireNonNullElse(updateEventRequestDto.getEventDate(), event.getEventDate()));
+        event.setTitle(Objects.requireNonNullElse(updateEventRequestDto.getTitle(), event.getTitle()));
         if (!Objects.isNull(updateEventRequestDto.getLocation())) {
-            Location location = getLocation(updateEventRequestDto.getLocation());
+            Location location = getLocation(updateEventRequestDto.getLocation(), event.getTitle());
             event.setLocation(location);
         }
         event.setPaid(Objects.requireNonNullElse(updateEventRequestDto.getPaid(), event.isPaid()));
         event.setParticipantLimit(Objects.requireNonNullElse(updateEventRequestDto.getParticipantLimit(), event.getParticipantLimit()));
         event.setRequestModeration(Objects.requireNonNullElse(updateEventRequestDto.getRequestModeration(), event.isRequestModeration()));
         event.setEventDate(Objects.requireNonNullElse(updateEventRequestDto.getEventDate(), event.getEventDate()));
-        event.setTitle(Objects.requireNonNullElse(updateEventRequestDto.getTitle(), event.getTitle()));
     }
 
     @Override
@@ -217,8 +220,16 @@ public class EventServiceImpl implements EventService {
                                                      List<Long> categoriesIds,
                                                      Instant rangeStart,
                                                      Instant rangeEnd,
+                                                     Long locationId, //Float lat, Float lon, Float radius,
                                                      Integer from, Integer size) {
         BooleanExpression condition = Expressions.TRUE.isTrue();
+        if (!Objects.isNull(locationId)) {
+            Location location = locationRepository.getLocationById(locationId);
+            condition = condition.and(
+                    Expressions.numberTemplate(Float.class, "distance({0}, {1}, {2}, {3})",
+                                    location.getLat(), location.getLon(), QLocation.location.lat, QLocation.location.lon)
+                            .loe(location.getRadius()));
+        }
         if (!Objects.isNull(usersIds) && !usersIds.isEmpty()) {
             condition = condition.and(QEvent.event.initiator.id.in(usersIds));
         }
@@ -277,14 +288,22 @@ public class EventServiceImpl implements EventService {
                                                             Instant rangeEnd,
                                                             Boolean onlyAvailable,
                                                             EventSort sort,
+                                                            Long locationId,
                                                             Integer from, Integer size,
                                                             HttpServletRequest request) {
+        BooleanExpression condition = QEvent.event.state.eq(EventState.PUBLISHED);
+        if (!Objects.isNull(locationId)) {
+            Location location = locationRepository.getLocationById(locationId);
+            condition = condition.and(
+                    Expressions.numberTemplate(Float.class, "distance({0}, {1}, {2}, {3})",
+                                    location.getLat(), location.getLon(), QLocation.location.lat, QLocation.location.lon)
+                            .loe(location.getRadius()));
+        }
         statsService.create(EndpointHitDto.builder()
                 .app(appName)
                 .uri(request.getRequestURI())
                 .ip(request.getRemoteAddr())
                 .build());
-        BooleanExpression condition = QEvent.event.state.eq(EventState.PUBLISHED);
         if (!Objects.isNull(text) && !text.isBlank()) {
             BooleanExpression conditionText = QEvent.event.annotation.containsIgnoreCase(text).or(QEvent.event.description.containsIgnoreCase(text));
             condition = condition.and(conditionText);
@@ -338,11 +357,13 @@ public class EventServiceImpl implements EventService {
         return EventMapper.toEventFullDto(event, views);
     }
 
-    private Location getLocation(LocationDto locationDto) {
+    private Location getLocation(LocationDto locationDto, String eventTitle) {
         return locationRepository.findByLatAndLon(locationDto.getLat(), locationDto.getLon())
                 .orElseGet(() -> locationRepository.save(Location.builder()
+                        .name(String.format(DEFAULT_LOCATION_FROM_EVENT_PREFIX, eventTitle))
                         .lat(locationDto.getLat())
                         .lon(locationDto.getLon())
+                        .radius(0.0F)
                         .build()));
     }
 }

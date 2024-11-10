@@ -19,6 +19,8 @@ public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPre
 
     boolean existsEventByCategory_Id(Long categoryId);
 
+    boolean existsEventByLocation_Id(Long locationId);
+
     default Event getEventById(Long eventId) {
         return findById(eventId)
                 .orElseThrow(() -> new NotFoundException(eventId, Event.class.toString()));

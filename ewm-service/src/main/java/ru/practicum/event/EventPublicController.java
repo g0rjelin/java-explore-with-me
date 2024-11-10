@@ -49,6 +49,7 @@ public class EventPublicController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
             @RequestParam(required = false, defaultValue = "false") Boolean onlyAvailable,
             @RequestParam(required = false) String sort,
+            @RequestParam(required = false) @Positive Long locationId,
             @RequestParam(required = false, defaultValue = "0") @PositiveOrZero Integer from,
             @RequestParam(required = false, defaultValue = "10") @Positive Integer size,
             HttpServletRequest request
@@ -63,6 +64,7 @@ public class EventPublicController {
                 Objects.isNull(rangeEnd) ? null : rangeEnd.atZone(UTC_ZONE).toInstant(),
                 onlyAvailable,
                 eventSort,
+                locationId,
                 from, size, request);
     }
 
