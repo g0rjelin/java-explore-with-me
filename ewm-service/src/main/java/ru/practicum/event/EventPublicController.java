@@ -2,6 +2,8 @@ package ru.practicum.event;
 
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AccessLevel;
@@ -17,11 +19,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.event.dto.EventFullDto;
+import ru.practicum.event.dto.EventPublicSearchDto;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.dto.EventSort;
 import ru.practicum.event.service.EventService;
 import ru.practicum.exception.BadRequestException;
 import ru.practicum.validation.DateRangeValidator;
+import ru.practicum.validation.LocationRequestValidator;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -50,6 +54,9 @@ public class EventPublicController {
             @RequestParam(required = false, defaultValue = "false") Boolean onlyAvailable,
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) @Positive Long locationId,
+            @RequestParam(required = false) @Min(-90) @Max(90) Float lat,
+            @RequestParam(required = false) @Min(-180) @Max(180) Float lon,
+            @RequestParam(required = false, defaultValue = "0") @PositiveOrZero Float radius,
             @RequestParam(required = false, defaultValue = "0") @PositiveOrZero Integer from,
             @RequestParam(required = false, defaultValue = "10") @Positive Integer size,
             HttpServletRequest request
@@ -57,15 +64,22 @@ public class EventPublicController {
         EventSort eventSort = Objects.isNull(sort) ? null : EventSort.from(sort)
                 .orElseThrow(() -> new BadRequestException(String.format(WRONG_EVENT_SORT_ENUM_ERROR_MSG, sort)));
         DateRangeValidator.validateDateRange(rangeStart, rangeEnd);
-        return eventService.getPublishedEventsWithFilter(text,
-                categoriesIds,
-                paid,
-                Objects.isNull(rangeStart) ? null : rangeStart.atZone(UTC_ZONE).toInstant(),
-                Objects.isNull(rangeEnd) ? null : rangeEnd.atZone(UTC_ZONE).toInstant(),
-                onlyAvailable,
-                eventSort,
-                locationId,
-                from, size, request);
+        LocationRequestValidator.validateLocationRequest(locationId, lat, lon);
+        return eventService.getPublishedEventsWithFilter(EventPublicSearchDto.builder()
+                        .text(text)
+                        .categoriesIds(categoriesIds)
+                        .paid(paid)
+                        .rangeStart(Objects.isNull(rangeStart) ? null : rangeStart.atZone(UTC_ZONE).toInstant())
+                        .rangeEnd(Objects.isNull(rangeEnd) ? null : rangeEnd.atZone(UTC_ZONE).toInstant())
+                        .onlyAvailable(onlyAvailable)
+                        .eventSort(eventSort)
+                        .locationId(locationId)
+                        .lat(lat)
+                        .lon(lon)
+                        .radius(radius)
+                        .from(from)
+                        .size(size)
+                        .build(), request);
     }
 
     @GetMapping("/{id}")

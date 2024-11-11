@@ -56,6 +56,7 @@ public class EventMapper {
                 .eventDate(event.getEventDate())
                 .id(event.getId())
                 .initiator(UserMapper.toUserShortDto(event.getInitiator()))
+                .location(LocationMapper.toLocationDto(event.getLocation()))
                 .paid(event.isPaid())
                 .title(event.getTitle())
                 .views(Objects.requireNonNullElse(views, 0L))

@@ -53,12 +53,11 @@
 											}
 										],
 										"url": {
-											"raw": "{{baseUrl}}/admin/locations",
+											"raw": "{{baseUrl}}/locations",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
-												"admin",
 												"locations"
 											],
 											"query": [
@@ -2307,6 +2306,280 @@
 							]
 						}
 					]
+				},
+				{
+					"name": "Event",
+					"item": [
+						{
+							"name": "Ошибка при запросе событий с ид локации и координатами",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"const main = async () => {\r",
+											"    const api = new API(pm);\r",
+											"    const rnd = new RandomUtils();\r",
+											"\r",
+											"    try {\r",
+											"        const user = await api.addUser(rnd.getUser());\r",
+											"        const category = await api.addCategory(rnd.getCategory());\r",
+											"        const newEventErmitage = rnd.getEvent(category.id);\r",
+											"        \r",
+											"    } catch(err) {\r",
+											"        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+											"    }\r",
+											"};\r",
+											"\r",
+											"const interval = setInterval(() => {}, 1000);\r",
+											"\r",
+											"setTimeout(async () => \r",
+											"    {\r",
+											"        try {\r",
+											"            // выполняем наш скрипт\r",
+											"            await main();\r",
+											"        } catch (e) {\r",
+											"            console.error(e);\r",
+											"        } finally {\r",
+											"            clearInterval(interval);\r",
+											"        }\r",
+											"    },  \r",
+											"    100 \r",
+											");"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Ответ должен содержать код статуса 400 и данные в формате json\", function () {\r",
+											"    pm.response.to.be.badRequest;    \r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json;\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/events?text=0&categories=0&paid=true&rangeStart=2022-01-06%2013%3A30%3A38&rangeEnd=2097-09-06%2013%3A30%3A38&onlyAvailable=false&sort=EVENT_DATE&from=0&size=1000&locationId={{locId}}&lat={{latPiter}}&lon={{lonPiter}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"events"
+									],
+									"query": [
+										{
+											"key": "text",
+											"value": "0",
+											"description": "текст для поиска в содержимом аннотации и подробном описании события"
+										},
+										{
+											"key": "categories",
+											"value": "0",
+											"description": "список идентификаторов категорий в которых будет вестись поиск"
+										},
+										{
+											"key": "paid",
+											"value": "true",
+											"description": "поиск только платных/бесплатных событий"
+										},
+										{
+											"key": "rangeStart",
+											"value": "2022-01-06%2013%3A30%3A38",
+											"description": "дата и время не раньше которых должно произойти событие"
+										},
+										{
+											"key": "rangeEnd",
+											"value": "2097-09-06%2013%3A30%3A38",
+											"description": "дата и время не позже которых должно произойти событие"
+										},
+										{
+											"key": "onlyAvailable",
+											"value": "false",
+											"description": "только события у которых не исчерпан лимит запросов на участие"
+										},
+										{
+											"key": "sort",
+											"value": "EVENT_DATE",
+											"description": "Вариант сортировки: по дате события или по количеству просмотров"
+										},
+										{
+											"key": "from",
+											"value": "0",
+											"description": "количество событий, которые нужно пропустить для формирования текущего набора"
+										},
+										{
+											"key": "size",
+											"value": "1000",
+											"description": "количество событий в наборе"
+										},
+										{
+											"key": "locationId",
+											"value": "{{locId}}",
+											"description": "идентификатор локации для поиска событий внутри нее"
+										},
+										{
+											"key": "lat",
+											"value": "{{latPiter}}"
+										},
+										{
+											"key": "lon",
+											"value": "{{lonPiter}}"
+										}
+									]
+								},
+								"description": "Обратите внимание: \n- это публичный эндпоинт, соответственно в выдаче должны быть только опубликованные события\n- текстовый поиск (по аннотации и подробному описанию) должен быть без учета регистра букв\n- если в запросе не указан диапазон дат [rangeStart-rangeEnd], то нужно выгружать события, которые произойдут позже текущей даты и времени\n- информация о каждом событии должна включать в себя количество просмотров и количество уже одобренных заявок на участие\n- информацию о том, что по этому эндпоинту был осуществлен и обработан запрос, нужно сохранить в сервисе статистики"
+							},
+							"response": []
+						},
+						{
+							"name": "Ошибка при запросе событий с неполными координатами",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"const main = async () => {\r",
+											"    const api = new API(pm);\r",
+											"    const rnd = new RandomUtils();\r",
+											"\r",
+											"    try {\r",
+											"        const user = await api.addUser(rnd.getUser());\r",
+											"        const category = await api.addCategory(rnd.getCategory());\r",
+											"        const newEventErmitage = rnd.getEvent(category.id);\r",
+											"\r",
+											"        const newLocationPiter = rnd.getLocation();\r",
+											"        \r",
+											"    } catch(err) {\r",
+											"        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+											"    }\r",
+											"};\r",
+											"\r",
+											"const interval = setInterval(() => {}, 1000);\r",
+											"\r",
+											"setTimeout(async () => \r",
+											"    {\r",
+											"        try {\r",
+											"            // выполняем наш скрипт\r",
+											"            await main();\r",
+											"        } catch (e) {\r",
+											"            console.error(e);\r",
+											"        } finally {\r",
+											"            clearInterval(interval);\r",
+											"        }\r",
+											"    },  \r",
+											"    100 \r",
+											");"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Ответ должен содержать код статуса 400 и данные в формате json\", function () {\r",
+											"    pm.response.to.be.badRequest;    \r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json;\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/events?text=0&categories=0&paid=true&rangeStart=2022-01-06%2013%3A30%3A38&rangeEnd=2097-09-06%2013%3A30%3A38&onlyAvailable=false&sort=EVENT_DATE&from=0&size=1000&lat={{latPiter}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"events"
+									],
+									"query": [
+										{
+											"key": "text",
+											"value": "0",
+											"description": "текст для поиска в содержимом аннотации и подробном описании события"
+										},
+										{
+											"key": "categories",
+											"value": "0",
+											"description": "список идентификаторов категорий в которых будет вестись поиск"
+										},
+										{
+											"key": "paid",
+											"value": "true",
+											"description": "поиск только платных/бесплатных событий"
+										},
+										{
+											"key": "rangeStart",
+											"value": "2022-01-06%2013%3A30%3A38",
+											"description": "дата и время не раньше которых должно произойти событие"
+										},
+										{
+											"key": "rangeEnd",
+											"value": "2097-09-06%2013%3A30%3A38",
+											"description": "дата и время не позже которых должно произойти событие"
+										},
+										{
+											"key": "onlyAvailable",
+											"value": "false",
+											"description": "только события у которых не исчерпан лимит запросов на участие"
+										},
+										{
+											"key": "sort",
+											"value": "EVENT_DATE",
+											"description": "Вариант сортировки: по дате события или по количеству просмотров"
+										},
+										{
+											"key": "from",
+											"value": "0",
+											"description": "количество событий, которые нужно пропустить для формирования текущего набора"
+										},
+										{
+											"key": "size",
+											"value": "1000",
+											"description": "количество событий в наборе"
+										},
+										{
+											"key": "lat",
+											"value": "{{latPiter}}"
+										}
+									]
+								},
+								"description": "Обратите внимание: \n- это публичный эндпоинт, соответственно в выдаче должны быть только опубликованные события\n- текстовый поиск (по аннотации и подробному описанию) должен быть без учета регистра букв\n- если в запросе не указан диапазон дат [rangeStart-rangeEnd], то нужно выгружать события, которые произойдут позже текущей даты и времени\n- информация о каждом событии должна включать в себя количество просмотров и количество уже одобренных заявок на участие\n- информацию о том, что по этому эндпоинту был осуществлен и обработан запрос, нужно сохранить в сервисе статистики"
+							},
+							"response": []
+						}
+					]
 				}
 			]
 		},
@@ -2518,7 +2791,7 @@
 			"name": "Event",
 			"item": [
 				{
-					"name": "Получение событий с возможностью фильтрации по локации",
+					"name": "Получение событий с возможностью фильтрации по ид локации",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -2532,15 +2805,32 @@
 									"        const user = await api.addUser(rnd.getUser());\r",
 									"        const category = await api.addCategory(rnd.getCategory());\r",
 									"        const newEventErmitage = rnd.getEvent(category.id);\r",
-									"        const newLocationErmitage = rnd.getLocation();\r",
-									"        newLocationErmitage.lat = pm.collectionVariables.get('latErmitage');\r",
-									"        newLocationErmitage.lon = pm.collectionVariables.get('lonErmitage');\r",
+									"\r",
 									"        const newLocationPiter = rnd.getLocation();\r",
 									"        newLocationPiter.lat = pm.collectionVariables.get('latPiter');\r",
 									"        newLocationPiter.lon = pm.collectionVariables.get('lonPiter');\r",
 									"        newLocationPiter.radius = pm.collectionVariables.get('radiusPiter');\r",
-									"        const locationErmitage = await api.addLocation(newLocationErmitage);\r",
-									"        const locationPiter = await api.addLocation(newLocationPiter);\r",
+									"        let locations = await api.findLocationByLatAndLon(newLocationPiter['lat'], newLocationPiter['lon']); \r",
+									"        let locationPiter; \r",
+									"        if (locations.length != 1) {\r",
+									"            locationPiter = await api.addLocation(newLocationPiter);\r",
+									"        } else {\r",
+									"            locationPiter = locations[0];\r",
+									"        }       \r",
+									"        pm.collectionVariables.set('response', locationPiter);\r",
+									"\r",
+									"        const newLocationErmitage = rnd.getLocation();\r",
+									"        newLocationErmitage.lat = pm.collectionVariables.get('latErmitage');\r",
+									"        newLocationErmitage.lon = pm.collectionVariables.get('lonErmitage');\r",
+									"        newLocationErmitage.radius = 0.0;\r",
+									"        locations = await api.findLocationByLatAndLon(newLocationErmitage['lat'], newLocationErmitage['lon']); \r",
+									"        let locationErmitage;\r",
+									"        if (locations.length != 1) {\r",
+									"            console.log(locations);\r",
+									"            locationErmitage = await api.addLocation(newLocationErmitage);\r",
+									"        } else {\r",
+									"            locationErmitage = locations[0];\r",
+									"        }\r",
 									"        newEventErmitage.location.lat = pm.collectionVariables.get('latErmitage');\r",
 									"        newEventErmitage.location.lon = pm.collectionVariables.get('lonErmitage');\r",
 									"        let event = await api.addEvent(user.id, newEventErmitage); //добавляем событие в Питере\r",
@@ -2553,7 +2843,7 @@
 									"        event = await api.publishEvent(event.id);\r",
 									"        pm.request.removeQueryParams(['text', 'categories', 'paid']);\r",
 									"        pm.collectionVariables.set('locationPiterId', locationPiter.id);\r",
-									"        pm.collectionVariables.set('response', event);\r",
+									"        pm.collectionVariables.set('responseErmitage', event);\r",
 									"        pm.collectionVariables.set('responseForNotIncludedCheck', eventOstankino);\r",
 									"        \r",
 									"    } catch(err) {\r",
@@ -2591,12 +2881,12 @@
 									"    pm.response.to.be.json;\r",
 									"});\r",
 									"\r",
-									"const source = pm.collectionVariables.get('response');\r",
+									"const source = pm.collectionVariables.get('responseErmitage');\r",
 									"const sourceNotFound = pm.collectionVariables.get('responseForNotIncludedCheck');\r",
 									"const targetArr = pm.response.json();\r",
 									"const target = targetArr[0];\r",
 									"\r",
-									"pm.test(\"Должно быть найдено только одно событие по заданному фильтру\", function () {\r",
+									"pm.test(\"Должно быть найдено ровно одно событие по заданному фильтру\", function () {\r",
 									"    pm.expect(targetArr.length).to.eql(1);\r",
 									"});\r",
 									"\r",
@@ -2692,6 +2982,414 @@
 									"key": "locationId",
 									"value": "{{locationPiterId}}",
 									"description": "идентификатор локации для поиска событий внутри нее"
+								}
+							]
+						},
+						"description": "Обратите внимание: \n- это публичный эндпоинт, соответственно в выдаче должны быть только опубликованные события\n- текстовый поиск (по аннотации и подробному описанию) должен быть без учета регистра букв\n- если в запросе не указан диапазон дат [rangeStart-rangeEnd], то нужно выгружать события, которые произойдут позже текущей даты и времени\n- информация о каждом событии должна включать в себя количество просмотров и количество уже одобренных заявок на участие\n- информацию о том, что по этому эндпоинту был осуществлен и обработан запрос, нужно сохранить в сервисе статистики"
+					},
+					"response": []
+				},
+				{
+					"name": "Получение событий с возможностью фильтрации по локации (с радиусом)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const main = async () => {\r",
+									"    const api = new API(pm);\r",
+									"    const rnd = new RandomUtils();\r",
+									"\r",
+									"    try {\r",
+									"        const user = await api.addUser(rnd.getUser());\r",
+									"        const category = await api.addCategory(rnd.getCategory());\r",
+									"        const newEventErmitage = rnd.getEvent(category.id);\r",
+									"\r",
+									"        const newLocationPiter = rnd.getLocation();\r",
+									"        newLocationPiter.lat = pm.collectionVariables.get('latPiter');\r",
+									"        newLocationPiter.lon = pm.collectionVariables.get('lonPiter');\r",
+									"        newLocationPiter.radius = pm.collectionVariables.get('radiusPiter');\r",
+									"        let locations = await api.findLocationByLatAndLon(newLocationPiter['lat'], newLocationPiter['lon']); \r",
+									"        let locationPiter; \r",
+									"        if (locations.length != 1) {\r",
+									"            locationPiter = await api.addLocation(newLocationPiter);\r",
+									"        } else {\r",
+									"            locationPiter = locations[0];\r",
+									"        }       \r",
+									"        pm.collectionVariables.set('response', locationPiter);\r",
+									"\r",
+									"        const newLocationErmitage = rnd.getLocation();\r",
+									"        newLocationErmitage.lat = pm.collectionVariables.get('latErmitage');\r",
+									"        newLocationErmitage.lon = pm.collectionVariables.get('lonErmitage');\r",
+									"        newLocationErmitage.radius = 0.0;\r",
+									"        locations = await api.findLocationByLatAndLon(newLocationErmitage['lat'], newLocationErmitage['lon']); \r",
+									"        let locationErmitage;\r",
+									"        if (locations.length != 1) {\r",
+									"            locationErmitage = await api.addLocation(newLocationErmitage);\r",
+									"        } else {\r",
+									"            locationErmitage = locations[0];\r",
+									"        }\r",
+									"        newEventErmitage.location.lat = pm.collectionVariables.get('latErmitage');\r",
+									"        newEventErmitage.location.lon = pm.collectionVariables.get('lonErmitage');\r",
+									"        //let event = await api.addEvent(user.id, newEventErmitage); //добавляем событие в Питере\r",
+									"        \r",
+									"        const newEventOstankino = rnd.getEvent(category.id);\r",
+									"        newEventOstankino.location.lat = pm.collectionVariables.get('latOstankino');\r",
+									"        newEventOstankino.location.lon = pm.collectionVariables.get('lonOstankino');\r",
+									"        let eventOstankino = await api.addEvent(user.id, newEventOstankino); //добавляем событие в Москве\r",
+									"\r",
+									"        //event = await api.publishEvent(event.id);\r",
+									"        pm.request.removeQueryParams(['text', 'categories', 'paid']);\r",
+									"        pm.collectionVariables.set('locationPiterId', locationPiter.id);\r",
+									"        //pm.collectionVariables.set('response', event);\r",
+									"        pm.collectionVariables.set('responseForNotIncludedCheck', eventOstankino);\r",
+									"        \r",
+									"    } catch(err) {\r",
+									"        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+									"    }\r",
+									"};\r",
+									"\r",
+									"const interval = setInterval(() => {}, 1000);\r",
+									"\r",
+									"setTimeout(async () => \r",
+									"    {\r",
+									"        try {\r",
+									"            // выполняем наш скрипт\r",
+									"            await main();\r",
+									"        } catch (e) {\r",
+									"            console.error(e);\r",
+									"        } finally {\r",
+									"            clearInterval(interval);\r",
+									"        }\r",
+									"    },  \r",
+									"    100 \r",
+									");"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
+									"    pm.response.to.be.ok;    \r",
+									"    pm.response.to.be.withBody;\r",
+									"    pm.response.to.be.json;\r",
+									"});\r",
+									"\r",
+									"const source = pm.collectionVariables.get('responseErmitage');\r",
+									"const sourceNotFound = pm.collectionVariables.get('responseForNotIncludedCheck');\r",
+									"const targetArr = pm.response.json();\r",
+									"const target = targetArr[0];\r",
+									"\r",
+									"pm.test(\"Должно быть найдено только одно событие по заданному фильтру\", function () {\r",
+									"    pm.expect(targetArr.length).to.eql(1);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Событие должно содержать поля: id, title, annotation, category, paid, eventDate, initiator, views, confirmedRequests\", function () {\r",
+									"pm.expect(target).to.have.property('id');\r",
+									"pm.expect(target).to.have.property('title');\r",
+									"pm.expect(target).to.have.property('annotation');\r",
+									"pm.expect(target).to.have.property('category');\r",
+									"pm.expect(target).to.have.property('paid');\r",
+									"pm.expect(target).to.have.property('eventDate');\r",
+									"pm.expect(target).to.have.property('initiator');\r",
+									"pm.expect(target).to.have.property('views');\r",
+									"pm.expect(target).to.have.property('confirmedRequests');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {\r",
+									"    pm.expect(source.annotation).equal(target.annotation, 'Аннотация события должна соответствовать аннотации события с указанным идентификатором');\r",
+									"    pm.expect(source.category.id).equal(target.category.id, 'Категория события должна соответствовать категории события с указанным идентификатором');\r",
+									"    pm.expect(source.paid.toString()).equal(target.paid.toString(), 'Стоимость события должна соответствовать стоимости события с указанным идентификатором');\r",
+									"    pm.expect(source.eventDate).equal(target.eventDate, 'Дата проведения события должна соответствовать дате проведения события с указанным идентификатором');\r",
+									"    pm.expect(source.title).equal(target.title, 'Название события должно соответствовать названию события с указанным идентификатором');\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/events?text=0&categories=0&paid=true&rangeStart=2022-01-06%2013%3A30%3A38&rangeEnd=2097-09-06%2013%3A30%3A38&onlyAvailable=false&sort=EVENT_DATE&from=0&size=1000&lat={{latPiter}}&lon={{lonPiter}}&radius={{radiusPiter}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"events"
+							],
+							"query": [
+								{
+									"key": "text",
+									"value": "0",
+									"description": "текст для поиска в содержимом аннотации и подробном описании события"
+								},
+								{
+									"key": "categories",
+									"value": "0",
+									"description": "список идентификаторов категорий в которых будет вестись поиск"
+								},
+								{
+									"key": "paid",
+									"value": "true",
+									"description": "поиск только платных/бесплатных событий"
+								},
+								{
+									"key": "rangeStart",
+									"value": "2022-01-06%2013%3A30%3A38",
+									"description": "дата и время не раньше которых должно произойти событие"
+								},
+								{
+									"key": "rangeEnd",
+									"value": "2097-09-06%2013%3A30%3A38",
+									"description": "дата и время не позже которых должно произойти событие"
+								},
+								{
+									"key": "onlyAvailable",
+									"value": "false",
+									"description": "только события у которых не исчерпан лимит запросов на участие"
+								},
+								{
+									"key": "sort",
+									"value": "EVENT_DATE",
+									"description": "Вариант сортировки: по дате события или по количеству просмотров"
+								},
+								{
+									"key": "from",
+									"value": "0",
+									"description": "количество событий, которые нужно пропустить для формирования текущего набора"
+								},
+								{
+									"key": "size",
+									"value": "1000",
+									"description": "количество событий в наборе"
+								},
+								{
+									"key": "lat",
+									"value": "{{latPiter}}"
+								},
+								{
+									"key": "lon",
+									"value": "{{lonPiter}}"
+								},
+								{
+									"key": "radius",
+									"value": "{{radiusPiter}}"
+								}
+							]
+						},
+						"description": "Обратите внимание: \n- это публичный эндпоинт, соответственно в выдаче должны быть только опубликованные события\n- текстовый поиск (по аннотации и подробному описанию) должен быть без учета регистра букв\n- если в запросе не указан диапазон дат [rangeStart-rangeEnd], то нужно выгружать события, которые произойдут позже текущей даты и времени\n- информация о каждом событии должна включать в себя количество просмотров и количество уже одобренных заявок на участие\n- информацию о том, что по этому эндпоинту был осуществлен и обработан запрос, нужно сохранить в сервисе статистики"
+					},
+					"response": []
+				},
+				{
+					"name": "Получение событий с возможностью фильтрации по локации (точка - без радиуса)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const main = async () => {\r",
+									"    const api = new API(pm);\r",
+									"    const rnd = new RandomUtils();\r",
+									"\r",
+									"    try {\r",
+									"        const user = await api.addUser(rnd.getUser());\r",
+									"        const category = await api.addCategory(rnd.getCategory());\r",
+									"        const newEventErmitage = rnd.getEvent(category.id);\r",
+									"\r",
+									"        const newLocationPiter = rnd.getLocation();\r",
+									"        newLocationPiter.lat = pm.collectionVariables.get('latPiter');\r",
+									"        newLocationPiter.lon = pm.collectionVariables.get('lonPiter');\r",
+									"        newLocationPiter.radius = pm.collectionVariables.get('radiusPiter');\r",
+									"        let locations = await api.findLocationByLatAndLon(newLocationPiter['lat'], newLocationPiter['lon']); \r",
+									"        let locationPiter; \r",
+									"        if (locations.length != 1) {\r",
+									"            locationPiter = await api.addLocation(newLocationPiter);\r",
+									"        } else {\r",
+									"            locationPiter = locations[0];\r",
+									"        }       \r",
+									"        pm.collectionVariables.set('response', locationPiter);\r",
+									"\r",
+									"        const newLocationErmitage = rnd.getLocation();\r",
+									"        newLocationErmitage.lat = pm.collectionVariables.get('latErmitage');\r",
+									"        newLocationErmitage.lon = pm.collectionVariables.get('lonErmitage');\r",
+									"        newLocationErmitage.radius = 0.0;\r",
+									"        locations = await api.findLocationByLatAndLon(newLocationErmitage['lat'], newLocationErmitage['lon']); \r",
+									"        let locationErmitage;\r",
+									"        if (locations.length != 1) {\r",
+									"            console.log(locations);\r",
+									"            locationErmitage = await api.addLocation(newLocationErmitage);\r",
+									"        } else {\r",
+									"            locationErmitage = locations[0];\r",
+									"        }\r",
+									"        newEventErmitage.location.lat = pm.collectionVariables.get('latErmitage');\r",
+									"        newEventErmitage.location.lon = pm.collectionVariables.get('lonErmitage');\r",
+									"        //let event = await api.addEvent(user.id, newEventErmitage); //добавляем событие в Питере\r",
+									"        \r",
+									"        const newEventOstankino = rnd.getEvent(category.id);\r",
+									"        newEventOstankino.location.lat = pm.collectionVariables.get('latOstankino');\r",
+									"        newEventOstankino.location.lon = pm.collectionVariables.get('lonOstankino');\r",
+									"        let eventOstankino = await api.addEvent(user.id, newEventOstankino); //добавляем событие в Москве\r",
+									"\r",
+									"        //event = await api.publishEvent(event.id);\r",
+									"        pm.request.removeQueryParams(['text', 'categories', 'paid']);\r",
+									"        pm.collectionVariables.set('locationPiterId', locationPiter.id);\r",
+									"        //pm.collectionVariables.set('response', event);\r",
+									"        pm.collectionVariables.set('responseForNotIncludedCheck', eventOstankino);\r",
+									"        \r",
+									"    } catch(err) {\r",
+									"        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+									"    }\r",
+									"};\r",
+									"\r",
+									"const interval = setInterval(() => {}, 1000);\r",
+									"\r",
+									"setTimeout(async () => \r",
+									"    {\r",
+									"        try {\r",
+									"            // выполняем наш скрипт\r",
+									"            await main();\r",
+									"        } catch (e) {\r",
+									"            console.error(e);\r",
+									"        } finally {\r",
+									"            clearInterval(interval);\r",
+									"        }\r",
+									"    },  \r",
+									"    100 \r",
+									");"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
+									"    pm.response.to.be.ok;    \r",
+									"    pm.response.to.be.withBody;\r",
+									"    pm.response.to.be.json;\r",
+									"});\r",
+									"\r",
+									"const source = pm.collectionVariables.get('responseErmitage');\r",
+									"const sourceNotFound = pm.collectionVariables.get('responseForNotIncludedCheck');\r",
+									"const targetArr = pm.response.json();\r",
+									"const target = targetArr[0];\r",
+									"\r",
+									"pm.test(\"Должно быть найдено только одно событие по заданному фильтру\", function () {\r",
+									"    pm.expect(targetArr.length).to.eql(1);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Событие должно содержать поля: id, title, annotation, category, paid, eventDate, initiator, views, confirmedRequests\", function () {\r",
+									"pm.expect(target).to.have.property('id');\r",
+									"pm.expect(target).to.have.property('title');\r",
+									"pm.expect(target).to.have.property('annotation');\r",
+									"pm.expect(target).to.have.property('category');\r",
+									"pm.expect(target).to.have.property('paid');\r",
+									"pm.expect(target).to.have.property('eventDate');\r",
+									"pm.expect(target).to.have.property('initiator');\r",
+									"pm.expect(target).to.have.property('views');\r",
+									"pm.expect(target).to.have.property('confirmedRequests');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Данные в ответе должны соответствовать данным в запросе\", function () {\r",
+									"    pm.expect(source.annotation).equal(target.annotation, 'Аннотация события должна соответствовать аннотации события с указанным идентификатором');\r",
+									"    pm.expect(source.category.id).equal(target.category.id, 'Категория события должна соответствовать категории события с указанным идентификатором');\r",
+									"    pm.expect(source.paid.toString()).equal(target.paid.toString(), 'Стоимость события должна соответствовать стоимости события с указанным идентификатором');\r",
+									"    pm.expect(source.eventDate).equal(target.eventDate, 'Дата проведения события должна соответствовать дате проведения события с указанным идентификатором');\r",
+									"    pm.expect(source.title).equal(target.title, 'Название события должно соответствовать названию события с указанным идентификатором');\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/events?text=0&categories=0&paid=true&rangeStart=2022-01-06%2013%3A30%3A38&rangeEnd=2097-09-06%2013%3A30%3A38&onlyAvailable=false&sort=EVENT_DATE&from=0&size=1000&lat={{latErmitage}}&lon={{lonErmitage}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"events"
+							],
+							"query": [
+								{
+									"key": "text",
+									"value": "0",
+									"description": "текст для поиска в содержимом аннотации и подробном описании события"
+								},
+								{
+									"key": "categories",
+									"value": "0",
+									"description": "список идентификаторов категорий в которых будет вестись поиск"
+								},
+								{
+									"key": "paid",
+									"value": "true",
+									"description": "поиск только платных/бесплатных событий"
+								},
+								{
+									"key": "rangeStart",
+									"value": "2022-01-06%2013%3A30%3A38",
+									"description": "дата и время не раньше которых должно произойти событие"
+								},
+								{
+									"key": "rangeEnd",
+									"value": "2097-09-06%2013%3A30%3A38",
+									"description": "дата и время не позже которых должно произойти событие"
+								},
+								{
+									"key": "onlyAvailable",
+									"value": "false",
+									"description": "только события у которых не исчерпан лимит запросов на участие"
+								},
+								{
+									"key": "sort",
+									"value": "EVENT_DATE",
+									"description": "Вариант сортировки: по дате события или по количеству просмотров"
+								},
+								{
+									"key": "from",
+									"value": "0",
+									"description": "количество событий, которые нужно пропустить для формирования текущего набора"
+								},
+								{
+									"key": "size",
+									"value": "1000",
+									"description": "количество событий в наборе"
+								},
+								{
+									"key": "lat",
+									"value": "{{latErmitage}}"
+								},
+								{
+									"key": "lon",
+									"value": "{{lonErmitage}}"
 								}
 							]
 						},
@@ -2897,12 +3595,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/admin/locations/:locId",
+							"raw": "{{baseUrl}}/locations/:locId",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"admin",
 								"locations",
 								":locId"
 							],
@@ -2936,7 +3633,7 @@
 									"});\r",
 									"\r",
 									"pm.sendRequest({\r",
-									"        url: pm.collectionVariables.get(\"baseUrl\") + \"/admin/locations/\" + locId,\r",
+									"        url: pm.collectionVariables.get(\"baseUrl\") + \"/locations/\" + locId,\r",
 									"        method: 'GET',\r",
 									"    }, (error, response) => {\r",
 									"        pm.test(\"Локация не должна быть найдена после удаления\", function () {\r",
@@ -3108,12 +3805,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/admin/locations?lat={{latMoscow}}&lon={{lonMoscow}}&radius={{radiusMoscow}}&from=0&size=1000",
+							"raw": "{{baseUrl}}/locations?lat={{latMoscow}}&lon={{lonMoscow}}&radius={{radiusMoscow}}&from=0&size=1000",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"admin",
 								"locations"
 							],
 							"query": [
@@ -3207,7 +3903,7 @@
 									"updatedLocationName = pm.collectionVariables.get('updatedLocationName');\r",
 									"\r",
 									"pm.sendRequest({\r",
-									"            url: pm.collectionVariables.get(\"baseUrl\") + \"/admin/locations/\" + locId,\r",
+									"            url: pm.collectionVariables.get(\"baseUrl\") + \"/locations/\" + locId,\r",
 									"            method: 'GET',\r",
 									"        }, (error, response) => {\r",
 									"            \r",
@@ -3310,11 +4006,11 @@
 					"    }",
 					"",
 					"    async findLocation(locId, verbose=null) {",
-					"        return this.get('/admin/locations/' + locId, null, \"Ошибка при поиске локации по id\", verbose);",
+					"        return this.get('/locations/' + locId, null, \"Ошибка при поиске локации по id\", verbose);",
 					"    }",
 					"",
 					"    async findLocationByLatAndLon(lat, lon, verbose=null) {",
-					"        return this.get('/admin/locations?lat=' + lat + '&lon=' + lon, null, \"Ошибка при поиске локации по lat и lon\", verbose);",
+					"        return this.get('/locations?lat=' + lat + '&lon=' + lon, null, \"Ошибка при поиске локации по lat и lon\", verbose);",
 					"    }",
 					"",
 					"",
@@ -3645,6 +4341,11 @@
 		{
 			"key": "lonKuskovo",
 			"value": "37.8089",
+			"type": "string"
+		},
+		{
+			"key": "responseErmitage",
+			"value": "",
 			"type": "string"
 		}
 	]

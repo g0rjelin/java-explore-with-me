@@ -17,10 +17,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import ru.practicum.event.dto.EventAdminSearchDto;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.UpdateEventAdminRequest;
 import ru.practicum.event.service.EventService;
 import ru.practicum.validation.DateRangeValidator;
+import ru.practicum.validation.LocationRequestValidator;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -44,18 +46,27 @@ public class EventAdminController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
             @RequestParam(required = false) @Positive Long locationId,
+            @RequestParam(required = false) Float lat,
+            @RequestParam(required = false) Float lon,
+            @RequestParam(required = false, defaultValue = "0") @PositiveOrZero Float radius,
             @RequestParam(required = false, defaultValue = "0") @PositiveOrZero Integer from,
             @RequestParam(required = false, defaultValue = "10") @Positive Integer size
     ) {
         DateRangeValidator.validateDateRange(rangeStart, rangeEnd);
-        return eventService.getAllEventsWithFilter(
-                usersIds,
-                states,
-                categoriesIds,
-                Objects.isNull(rangeStart) ? null : rangeStart.atZone(UTC_ZONE).toInstant(),
-                Objects.isNull(rangeEnd) ? null : rangeEnd.atZone(UTC_ZONE).toInstant(),
-                locationId,
-                from, size);
+        LocationRequestValidator.validateLocationRequest(locationId, lat, lon);
+        return eventService.getAllEventsWithFilter(EventAdminSearchDto.builder()
+                        .usersIds(usersIds)
+                        .states(states)
+                        .categoriesIds(categoriesIds)
+                        .rangeStart(Objects.isNull(rangeStart) ? null : rangeStart.atZone(UTC_ZONE).toInstant())
+                        .rangeEnd(Objects.isNull(rangeEnd) ? null : rangeEnd.atZone(UTC_ZONE).toInstant())
+                        .locationId(locationId)
+                        .lat(lat)
+                        .lon(lon)
+                        .radius(radius)
+                        .from(from)
+                        .size(size)
+                        .build());
     }
 
     @PatchMapping("/{eventId}")
