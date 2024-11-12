@@ -54,19 +54,19 @@ public class EventAdminController {
     ) {
         DateRangeValidator.validateDateRange(rangeStart, rangeEnd);
         LocationRequestValidator.validateLocationRequest(locationId, lat, lon);
-        return eventService.getAllEventsWithFilter(EventAdminSearchDto.builder()
-                        .usersIds(usersIds)
-                        .states(states)
-                        .categoriesIds(categoriesIds)
-                        .rangeStart(Objects.isNull(rangeStart) ? null : rangeStart.atZone(UTC_ZONE).toInstant())
-                        .rangeEnd(Objects.isNull(rangeEnd) ? null : rangeEnd.atZone(UTC_ZONE).toInstant())
-                        .locationId(locationId)
-                        .lat(lat)
-                        .lon(lon)
-                        .radius(radius)
-                        .from(from)
-                        .size(size)
-                        .build());
+        return eventService.getAllEventsWithFilter(new EventAdminSearchDto(
+                usersIds,
+                states,
+                categoriesIds,
+                Objects.isNull(rangeStart) ? null : rangeStart.atZone(UTC_ZONE).toInstant(),
+                Objects.isNull(rangeEnd) ? null : rangeEnd.atZone(UTC_ZONE).toInstant(),
+                locationId,
+                lat,
+                lon,
+                radius,
+                from,
+                size));
+
     }
 
     @PatchMapping("/{eventId}")

@@ -1,32 +1,37 @@
 package ru.practicum.event.dto;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
 import java.util.List;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class EventPublicSearchDto {
-    String text;
-    List<Long> categoriesIds;
-    Boolean paid;
-    Instant rangeStart;
-    Instant rangeEnd;
-    Boolean onlyAvailable;
-    EventSort eventSort;
-    Long locationId;
-    Float lat;
-    Float lon;
-    Float radius;
-    Integer from;
-    Integer size;
+@Getter
+public class EventPublicSearchDto extends AbstractEventSearchDto {
+    final String text;
+    final Boolean paid;
+    final Boolean onlyAvailable;
+    final EventSort eventSort;
+
+    public EventPublicSearchDto(String text,
+                                Boolean paid,
+                                Boolean onlyAvailable,
+                                EventSort eventSort,
+                                List<Long> categoriesIds,
+                                Instant rangeStart,
+                                Instant rangeEnd,
+                                Long locationId,
+                                Float lat,
+                                Float lon,
+                                Float radius,
+                                Integer from,
+                                Integer size) {
+        super(categoriesIds, rangeStart, rangeEnd, locationId, lat, lon, radius, from, size);
+        this.text = text;
+        this.paid = paid;
+        this.onlyAvailable = onlyAvailable;
+        this.eventSort = eventSort;
+    }
 }

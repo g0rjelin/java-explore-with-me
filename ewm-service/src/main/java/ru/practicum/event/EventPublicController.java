@@ -65,21 +65,20 @@ public class EventPublicController {
                 .orElseThrow(() -> new BadRequestException(String.format(WRONG_EVENT_SORT_ENUM_ERROR_MSG, sort)));
         DateRangeValidator.validateDateRange(rangeStart, rangeEnd);
         LocationRequestValidator.validateLocationRequest(locationId, lat, lon);
-        return eventService.getPublishedEventsWithFilter(EventPublicSearchDto.builder()
-                        .text(text)
-                        .categoriesIds(categoriesIds)
-                        .paid(paid)
-                        .rangeStart(Objects.isNull(rangeStart) ? null : rangeStart.atZone(UTC_ZONE).toInstant())
-                        .rangeEnd(Objects.isNull(rangeEnd) ? null : rangeEnd.atZone(UTC_ZONE).toInstant())
-                        .onlyAvailable(onlyAvailable)
-                        .eventSort(eventSort)
-                        .locationId(locationId)
-                        .lat(lat)
-                        .lon(lon)
-                        .radius(radius)
-                        .from(from)
-                        .size(size)
-                        .build(), request);
+        return eventService.getPublishedEventsWithFilter(new EventPublicSearchDto(
+                text,
+                paid,
+                onlyAvailable,
+                eventSort,
+                categoriesIds,
+                Objects.isNull(rangeStart) ? null : rangeStart.atZone(UTC_ZONE).toInstant(),
+                Objects.isNull(rangeEnd) ? null : rangeEnd.atZone(UTC_ZONE).toInstant(),
+                locationId,
+                lat,
+                lon,
+                radius,
+                from,
+                size), request);
     }
 
     @GetMapping("/{id}")

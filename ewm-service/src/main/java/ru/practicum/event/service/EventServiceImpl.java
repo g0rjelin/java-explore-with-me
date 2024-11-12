@@ -12,6 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.repository.CategoryRepository;
+import ru.practicum.event.dto.AbstractEventSearchDto;
 import ru.practicum.event.dto.AbstractUpdateEventRequestDto;
 import ru.practicum.event.dto.EventAdminSearchDto;
 import ru.practicum.event.dto.EventFullDto;
@@ -133,25 +134,6 @@ public class EventServiceImpl implements EventService {
         return EventMapper.toEventFullDto(eventRepository.save(event), statsService.getViewsFromStartToNow(event.getCreatedOn(), eventId));
     }
 
-    private void setEventRequestsDtoToEvent(AbstractUpdateEventRequestDto updateEventRequestDto, Event event) {
-        if (!Objects.isNull(updateEventRequestDto.getCategoryId())) {
-            Category category = categoryRepository.getCategoryById(updateEventRequestDto.getCategoryId());
-            event.setCategory(category);
-        }
-        event.setAnnotation(Objects.requireNonNullElse(updateEventRequestDto.getAnnotation(), event.getAnnotation()));
-        event.setDescription(Objects.requireNonNullElse(updateEventRequestDto.getDescription(), event.getDescription()));
-        event.setEventDate(Objects.requireNonNullElse(updateEventRequestDto.getEventDate(), event.getEventDate()));
-        event.setTitle(Objects.requireNonNullElse(updateEventRequestDto.getTitle(), event.getTitle()));
-        if (!Objects.isNull(updateEventRequestDto.getLocation())) {
-            Location location = getLocation(updateEventRequestDto.getLocation(), event.getTitle());
-            event.setLocation(location);
-        }
-        event.setPaid(Objects.requireNonNullElse(updateEventRequestDto.getPaid(), event.isPaid()));
-        event.setParticipantLimit(Objects.requireNonNullElse(updateEventRequestDto.getParticipantLimit(), event.getParticipantLimit()));
-        event.setRequestModeration(Objects.requireNonNullElse(updateEventRequestDto.getRequestModeration(), event.isRequestModeration()));
-        event.setEventDate(Objects.requireNonNullElse(updateEventRequestDto.getEventDate(), event.getEventDate()));
-    }
-
     @Override
     public List<ParticipationRequestDto> getParticipationRequestsForEventByUserId(Long userId, Long eventId) {
         User initiator = userRepository.getUserById(userId);
@@ -219,27 +201,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventFullDto> getAllEventsWithFilter(EventAdminSearchDto eventAdminSearchDto) {
         BooleanExpression condition = Expressions.TRUE.isTrue();
-        Long locationId = eventAdminSearchDto.getLocationId();
-        Float lat = eventAdminSearchDto.getLat();
-        Float lon = eventAdminSearchDto.getLon();
-        Float radius = eventAdminSearchDto.getRadius();
-        if (!Objects.isNull(locationId) || (!Objects.isNull(lat) && !Objects.isNull(lon))) {
-            if (!Objects.isNull(locationId)) {
-                Location location = locationRepository.getLocationById(locationId);
-                lat = location.getLat();
-                lon = location.getLon();
-                radius = location.getRadius();
-            }
-            if (Objects.isNull(radius) || radius.equals(0.0F)) {
-                condition = condition.and(QLocation.location.lat.eq(lat)
-                        .and(QLocation.location.lon.eq(lon)));
-            } else {
-                condition = condition.and(
-                        Expressions.numberTemplate(Float.class, "distance({0}, {1}, {2}, {3})",
-                                        lat, lon, QLocation.location.lat, QLocation.location.lon)
-                                .loe(radius));
-            }
-        }
+        setConditionFromEventSearch(condition, eventAdminSearchDto);
         List<Long> usersIds = eventAdminSearchDto.getUsersIds();
         if (!Objects.isNull(usersIds) && !usersIds.isEmpty()) {
             condition = condition.and(QEvent.event.initiator.id.in(usersIds));
@@ -250,19 +212,6 @@ public class EventServiceImpl implements EventService {
                     .map(EventState::valueOf)
                     .toList();
             condition = condition.and(QEvent.event.state.in(eventStates));
-        }
-        List<Long> categoriesIds = eventAdminSearchDto.getCategoriesIds();
-        if (!Objects.isNull(categoriesIds) && !categoriesIds.isEmpty()) {
-            List<Category> categoryList = categoryRepository.findAllById(categoriesIds);
-            condition = condition.and(QEvent.event.category.in(categoryList));
-        }
-        Instant rangeStart = eventAdminSearchDto.getRangeStart();
-        if (!Objects.isNull(rangeStart)) {
-            condition = condition.and(QEvent.event.eventDate.after(rangeStart));
-        }
-        Instant rangeEnd = eventAdminSearchDto.getRangeEnd();
-        if (!Objects.isNull(rangeEnd)) {
-            condition = condition.and(QEvent.event.eventDate.before(rangeEnd));
         }
         Integer from = eventAdminSearchDto.getFrom();
         Integer size = eventAdminSearchDto.getSize();
@@ -301,27 +250,7 @@ public class EventServiceImpl implements EventService {
     public List<EventShortDto> getPublishedEventsWithFilter(EventPublicSearchDto eventPublicSearchDto,
                                                             HttpServletRequest request) {
         BooleanExpression condition = QEvent.event.state.eq(EventState.PUBLISHED);
-        Long locationId = eventPublicSearchDto.getLocationId();
-        Float lat = eventPublicSearchDto.getLat();
-        Float lon = eventPublicSearchDto.getLon();
-        Float radius = eventPublicSearchDto.getRadius();
-        if (!Objects.isNull(locationId) || (!Objects.isNull(lat) && !Objects.isNull(lon))) {
-            if (!Objects.isNull(locationId)) {
-                Location location = locationRepository.getLocationById(locationId);
-                lat = location.getLat();
-                lon = location.getLon();
-                radius = location.getRadius();
-            }
-            if (Objects.isNull(radius) || radius.equals(0.0F)) {
-                condition = condition.and(QLocation.location.lat.eq(lat)
-                        .and(QLocation.location.lon.eq(lon)));
-            } else {
-                condition = condition.and(
-                        Expressions.numberTemplate(Float.class, "distance({0}, {1}, {2}, {3})",
-                                        lat, lon, QLocation.location.lat, QLocation.location.lon)
-                                .loe(radius));
-            }
-        }
+        setConditionFromEventSearch(condition, eventPublicSearchDto);
         statsService.create(EndpointHitDto.builder()
                 .app(appName)
                 .uri(request.getRequestURI())
@@ -331,23 +260,6 @@ public class EventServiceImpl implements EventService {
         if (!Objects.isNull(text) && !text.isBlank()) {
             BooleanExpression conditionText = QEvent.event.annotation.containsIgnoreCase(text).or(QEvent.event.description.containsIgnoreCase(text));
             condition = condition.and(conditionText);
-        }
-        List<Long> categoriesIds = eventPublicSearchDto.getCategoriesIds();
-        if (!Objects.isNull(categoriesIds) && !categoriesIds.isEmpty()) {
-            List<Category> categoryList = categoryRepository.findAllById(categoriesIds);
-            condition = condition.and(QEvent.event.category.in(categoryList));
-        }
-        Instant rangeStart = eventPublicSearchDto.getRangeStart();
-        Instant rangeEnd = eventPublicSearchDto.getRangeEnd();
-        if (Objects.isNull(rangeStart) && Objects.isNull(rangeEnd)) {
-            condition = condition.and(QEvent.event.eventDate.after(Instant.now()));
-        } else {
-            if (!Objects.isNull(rangeStart)) {
-                condition = condition.and(QEvent.event.eventDate.after(rangeStart));
-            }
-            if (!Objects.isNull(rangeEnd)) {
-                condition = condition.and(QEvent.event.eventDate.before(rangeEnd));
-            }
         }
         Boolean onlyAvailable = eventPublicSearchDto.getOnlyAvailable();
         if (!Objects.isNull(onlyAvailable)) {
@@ -360,11 +272,10 @@ public class EventServiceImpl implements EventService {
         PageRequest page;
         if (!Objects.isNull(sort) && sort.equals(EventSort.EVENT_DATE)) {
             page = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("eventDate").ascending());
-            events = eventRepository.findAll(condition, page).getContent();
         } else {
             page = PageRequest.of(from > 0 ? from / size : 0, size);
-            events = eventRepository.findAll(condition, page).getContent();
         }
+        events = eventRepository.findAll(condition, page).getContent();
         Map<Long, Long> views = statsService.getViewsForEvents(events);
         List<EventShortDto> eventShortDtos = EventMapper.toEventShortDto(events, views);
         if (!Objects.isNull(sort) && sort.equals(EventSort.VIEWS)) {
@@ -388,6 +299,26 @@ public class EventServiceImpl implements EventService {
         return EventMapper.toEventFullDto(event, views);
     }
 
+    private void setEventRequestsDtoToEvent(AbstractUpdateEventRequestDto updateEventRequestDto, Event event) {
+        if (!Objects.isNull(updateEventRequestDto.getCategoryId())) {
+            Category category = categoryRepository.getCategoryById(updateEventRequestDto.getCategoryId());
+            event.setCategory(category);
+        }
+        event.setAnnotation(Objects.requireNonNullElse(updateEventRequestDto.getAnnotation(), event.getAnnotation()));
+        event.setDescription(Objects.requireNonNullElse(updateEventRequestDto.getDescription(), event.getDescription()));
+        event.setEventDate(Objects.requireNonNullElse(updateEventRequestDto.getEventDate(), event.getEventDate()));
+        event.setTitle(Objects.requireNonNullElse(updateEventRequestDto.getTitle(), event.getTitle()));
+        if (!Objects.isNull(updateEventRequestDto.getLocation())) {
+            Location location = getLocation(updateEventRequestDto.getLocation(), event.getTitle());
+            event.setLocation(location);
+        }
+        event.setPaid(Objects.requireNonNullElse(updateEventRequestDto.getPaid(), event.isPaid()));
+        event.setParticipantLimit(Objects.requireNonNullElse(updateEventRequestDto.getParticipantLimit(), event.getParticipantLimit()));
+        event.setRequestModeration(Objects.requireNonNullElse(updateEventRequestDto.getRequestModeration(), event.isRequestModeration()));
+        event.setEventDate(Objects.requireNonNullElse(updateEventRequestDto.getEventDate(), event.getEventDate()));
+    }
+
+
     private Location getLocation(LocationDto locationDto, String eventTitle) {
         return locationRepository.findByLatAndLon(locationDto.getLat(), locationDto.getLon())
                 .orElseGet(() -> locationRepository.save(Location.builder()
@@ -396,5 +327,46 @@ public class EventServiceImpl implements EventService {
                         .lon(locationDto.getLon())
                         .radius(0.0F)
                         .build()));
+    }
+
+    private void setConditionFromEventSearch(BooleanExpression condition, AbstractEventSearchDto eventSearchDto) {
+        Long locationId = eventSearchDto.getLocationId();
+        Float lat = eventSearchDto.getLat();
+        Float lon = eventSearchDto.getLon();
+        Float radius = eventSearchDto.getRadius();
+        if (!Objects.isNull(locationId) || (!Objects.isNull(lat) && !Objects.isNull(lon))) {
+            if (!Objects.isNull(locationId)) {
+                Location location = locationRepository.getLocationById(locationId);
+                lat = location.getLat();
+                lon = location.getLon();
+                radius = location.getRadius();
+            }
+            if (Objects.isNull(radius) || radius.equals(0.0F)) {
+                condition = condition.and(QLocation.location.lat.eq(lat)
+                        .and(QLocation.location.lon.eq(lon)));
+            } else {
+                condition = condition.and(
+                        Expressions.numberTemplate(Float.class, "distance({0}, {1}, {2}, {3})",
+                                        lat, lon, QLocation.location.lat, QLocation.location.lon)
+                                .loe(radius));
+            }
+        }
+        List<Long> categoriesIds = eventSearchDto.getCategoriesIds();
+        if (!Objects.isNull(categoriesIds) && !categoriesIds.isEmpty()) {
+            List<Category> categoryList = categoryRepository.findAllById(categoriesIds);
+            condition = condition.and(QEvent.event.category.in(categoryList));
+        }
+        Instant rangeStart = eventSearchDto.getRangeStart();
+        Instant rangeEnd = eventSearchDto.getRangeEnd();
+        if (Objects.isNull(rangeStart) && Objects.isNull(rangeEnd)) {
+            condition = condition.and(QEvent.event.eventDate.after(Instant.now()));
+        } else {
+            if (!Objects.isNull(rangeStart)) {
+                condition = condition.and(QEvent.event.eventDate.after(rangeStart));
+            }
+            if (!Objects.isNull(rangeEnd)) {
+                condition = condition.and(QEvent.event.eventDate.before(rangeEnd));
+            }
+        }
     }
 }
