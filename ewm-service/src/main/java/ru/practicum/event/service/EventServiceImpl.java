@@ -201,7 +201,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventFullDto> getAllEventsWithFilter(EventAdminSearchDto eventAdminSearchDto) {
         BooleanExpression condition = Expressions.TRUE.isTrue();
-        setConditionFromEventSearch(condition, eventAdminSearchDto);
+        condition = getConditionFromEventSearch(condition, eventAdminSearchDto);
         List<Long> usersIds = eventAdminSearchDto.getUsersIds();
         if (!Objects.isNull(usersIds) && !usersIds.isEmpty()) {
             condition = condition.and(QEvent.event.initiator.id.in(usersIds));
@@ -250,7 +250,7 @@ public class EventServiceImpl implements EventService {
     public List<EventShortDto> getPublishedEventsWithFilter(EventPublicSearchDto eventPublicSearchDto,
                                                             HttpServletRequest request) {
         BooleanExpression condition = QEvent.event.state.eq(EventState.PUBLISHED);
-        setConditionFromEventSearch(condition, eventPublicSearchDto);
+        condition = getConditionFromEventSearch(condition, eventPublicSearchDto);
         statsService.create(EndpointHitDto.builder()
                 .app(appName)
                 .uri(request.getRequestURI())
@@ -329,7 +329,7 @@ public class EventServiceImpl implements EventService {
                         .build()));
     }
 
-    private void setConditionFromEventSearch(BooleanExpression condition, AbstractEventSearchDto eventSearchDto) {
+    private BooleanExpression getConditionFromEventSearch(BooleanExpression condition, AbstractEventSearchDto eventSearchDto) {
         Long locationId = eventSearchDto.getLocationId();
         Float lat = eventSearchDto.getLat();
         Float lon = eventSearchDto.getLon();
@@ -368,5 +368,6 @@ public class EventServiceImpl implements EventService {
                 condition = condition.and(QEvent.event.eventDate.before(rangeEnd));
             }
         }
+        return condition;
     }
 }
