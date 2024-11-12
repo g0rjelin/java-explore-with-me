@@ -9,6 +9,7 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.DateTimeFormat;
+import ru.practicum.location.dto.LocationDto;
 import ru.practicum.validation.FutureHours;
 
 import java.time.Instant;

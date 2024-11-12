@@ -17,10 +17,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import ru.practicum.event.dto.EventAdminSearchDto;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.UpdateEventAdminRequest;
 import ru.practicum.event.service.EventService;
 import ru.practicum.validation.DateRangeValidator;
+import ru.practicum.validation.LocationRequestValidator;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -43,17 +45,28 @@ public class EventAdminController {
             @RequestParam(name = "categories", required = false) List<@Positive Long> categoriesIds,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
+            @RequestParam(required = false) @Positive Long locationId,
+            @RequestParam(required = false) Float lat,
+            @RequestParam(required = false) Float lon,
+            @RequestParam(required = false, defaultValue = "0") @PositiveOrZero Float radius,
             @RequestParam(required = false, defaultValue = "0") @PositiveOrZero Integer from,
             @RequestParam(required = false, defaultValue = "10") @Positive Integer size
     ) {
         DateRangeValidator.validateDateRange(rangeStart, rangeEnd);
-        return eventService.getAllEventsWithFilter(
+        LocationRequestValidator.validateLocationRequest(locationId, lat, lon);
+        return eventService.getAllEventsWithFilter(new EventAdminSearchDto(
                 usersIds,
                 states,
                 categoriesIds,
                 Objects.isNull(rangeStart) ? null : rangeStart.atZone(UTC_ZONE).toInstant(),
                 Objects.isNull(rangeEnd) ? null : rangeEnd.atZone(UTC_ZONE).toInstant(),
-                from, size);
+                locationId,
+                lat,
+                lon,
+                radius,
+                from,
+                size));
+
     }
 
     @PatchMapping("/{eventId}")

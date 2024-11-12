@@ -3,10 +3,14 @@ package ru.practicum.event.dto;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
+import ru.practicum.location.dto.LocationDto;
 
 import java.time.Instant;
 
+@FieldDefaults(level = AccessLevel.PROTECTED)
 @Data
 public abstract class AbstractUpdateEventRequestDto {
     @Size(min = 20, max = 2000)

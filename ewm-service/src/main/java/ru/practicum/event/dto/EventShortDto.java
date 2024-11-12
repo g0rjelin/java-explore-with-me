@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.category.dto.CategoryDto;
+import ru.practicum.location.dto.LocationDto;
 import ru.practicum.user.dto.UserShortDto;
 
 import java.time.Instant;
@@ -21,6 +22,7 @@ public class EventShortDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "UTC")
     Instant eventDate;
     UserShortDto initiator;
+    LocationDto location;
     boolean paid;
     String title;
     long views;

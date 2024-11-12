@@ -1,4 +1,4 @@
-package ru.practicum.event.model;
+package ru.practicum.location.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -25,4 +25,6 @@ public class Location {
     Long id;
     Float lat;
     Float lon;
+    String name;
+    Float radius; //километры
 }
